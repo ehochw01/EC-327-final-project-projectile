@@ -20,6 +20,17 @@ Aim for the targets on the screen. The more centered on the target you hit, the 
 
 Make sure to consider wind when aiming your shot. 
 
+## Folder structure
+
+```
+include/   header files (.h)
+src/       implementation files (.cpp)
+Makefile
+README.md
+```
+
+Headers live in ```include/``` and are compiled with the ```-Iinclude``` flag, so source files include them by bare filename (e.g. ```#include "Cannon.h"```) without needing a relative path.
+
 ## Inheritance structure of classes
 
 The root class is ```Entity``` which has a position.

@@ -83,12 +83,12 @@ void Cannon::Draw() const {
 }
 
 void Cannon::Fire(Projectile& ball) {
-    Vector3 dir = AimDirection();
 
+    Vector3 dir = AimDirection();
     ball.position = pivot;
     // aim direction * _launchSpeed 
     ball.velocity = { dir.x * _launchSpeed, dir.y * _launchSpeed, dir.z * _launchSpeed };
-
+    
     _launchSpeed = 0.0f;
 }
 

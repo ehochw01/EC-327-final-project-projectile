@@ -2,6 +2,8 @@
 #include "Projectile.h"
 #include <cmath>
 #include "Cannon.h"
+#include "Target.h"
+#include "Constants.h"
 
 //run code, shoot with the R key for now. Will be upon spacebar release when sid adds his part. 
 
@@ -92,9 +94,9 @@ int main() {
     // sets up the camera, behind the cannon looking fwd
     //the Camera3D class already exists in raylib, with useful methods
     Camera3D camera = {};
-    camera.position = {-10.0f, 5.0f, 0.0f}; //behind the camera (neg x), and above, (pos y), classic video game)
+    camera.position = {-10.0f, 2.5f, 0.0f}; //behind the camera (neg x), and above, (pos y), classic video game)
                                             // the reason for the f's is that raylib using a Vector3 struct that takes in float numbers, not doubles. 
-    camera.target = {0.0f, 2.0f, 0.0f};  //what its looking at, slightly upward, this func draws line between position and target, to determine our line of sight
+    camera.target = {0.0f, 3.0f, 0.0f};  //what its looking at, slightly upward, this func draws line between position and target, to determine our line of sight
     camera.up = {0.0f, 1.0f, 0.0f};     //determines which way is up. 
     camera.fovy = 60.0f;   //fovy means field of view, in degrees
     camera.projection = CAMERA_PERSPECTIVE; //makes distant thibngs shrink, parallel lines ocnverge toward horizon, same as our eyes. other views available.
@@ -105,6 +107,9 @@ int main() {
     Projectile ball;
     ball.position = cannon.getPivot(); //cannon ball is in the barrel!
     ball.active = false; //dormant ball, not simulated until fired
+
+    Target target; //target is a sphere, will be drawn at a random location in the world.
+    target.position = { 50.0f, 15.0f, 0.0f }; //target is at 50m downrange, on the ground, radius is 0.5m so y=0.5 to sit on the ground
 
    
     ball.GenerateWind(); //generate wind for the first 6 shots
@@ -129,7 +134,8 @@ int main() {
             ball.active = true;
 
             shotsSinceWind++;
-            if (shotsSinceWind >= 6) { ball.GenerateWind(); shotsSinceWind = 0; }
+            if (shotsSinceWind >= 3) { ball.GenerateWind(); shotsSinceWind = 0; }
+
         }
 
         if (ball.active) ball.Update(fTime);   // only simulate a ball in flight
@@ -144,7 +150,7 @@ int main() {
                 cannon.Draw();   //draw the cannon at the origin, barrel points along the current aim
 
                 ball.Draw(); //draw the ball at its current location, everytime this is hit in each loop, it uses the new updated ball position as derived by the math in the physicsbody source code.
-
+                target.Draw(); //draw the target at its location, currently static but we could make it move later if we wanted.
                 DrawSphere({0,0,0}, 0.3f, RED);  //small sphere to mark the center of the grid.
             EndMode3D(); //no longer drawing in the 3d world after this, but on the flat 2d screen
 

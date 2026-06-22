@@ -13,7 +13,7 @@ class Cannon {
 public:
     float azimuth   = 0.0f;   // Sid: left/right, degrees, range -90 to 90
     float elevation = 30.0f;  // Sid: up/down, degrees, range 0 to 85
-    float power     = 20.0f;  // Sid: launch speed m/s, range 0 to 100 (spacebar hold)
+    float power     = 0.0f;  // Sid: launch speed m/s, range 0 to 100 (spacebar hold)
 
     Vector3 pivot   = {0.0f, 1.0f, 0.0f};   // barrel hinge + launch point
 

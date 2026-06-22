@@ -85,7 +85,7 @@ int main() {
 
     Cannon cannon;   //owns aim + power, Sid's input writes to this. fires the ball along the barrel
     Projectile ball;
-    ball.position = cannon.pivot; //cannon ball is in the barrel!
+    ball.position = cannon.getPivot(); //cannon ball is in the barrel!
     ball.active = false; //dormant ball, not simulated until fired
 
    
@@ -93,7 +93,7 @@ int main() {
     int shotsSinceWind = 0; //counts shots fired under current wind. Wind changes every 6 shots.
  //this is our mainloop, 
     while (!WindowShouldClose()) {    //will be true until we hit escape key, only way to end the sim!
-        float dt = GetFrameTime(); //seconds since last frame, in our case 1/60 secs, then uses this to feed the physics engine
+        float fTime = GetFrameTime(); //seconds since last frame, in our case 1/60 secs, then uses this to feed the physics engine
 
 
         if (IsKeyPressed(KEY_R)) {
@@ -106,10 +106,10 @@ int main() {
             }
         }
  //   TEMP dev-only aim test so I can swing the barrel myself — REMOVE before merge (Sid owns the arrows)
-         if (IsKeyDown(KEY_LEFT))  cannon.azimuth   -= 60.0f * dt;
-         if (IsKeyDown(KEY_RIGHT)) cannon.azimuth   += 60.0f * dt;
-         if (IsKeyDown(KEY_UP))    cannon.elevation += 60.0f * dt;
-         if (IsKeyDown(KEY_DOWN))  cannon.elevation -= 60.0f * dt;
+         if (IsKeyDown(KEY_LEFT))  cannon.azimuth   -= 60.0f *fTime;
+         if (IsKeyDown(KEY_RIGHT)) cannon.azimuth   += 60.0f *fTime;
+         if (IsKeyDown(KEY_UP))    cannon.elevation += 60.0f *fTime;
+         if (IsKeyDown(KEY_DOWN))  cannon.elevation -= 60.0f *fTime;
         if (ball.active) ball.Update(dt);   // only simulate a ball that's in flight
 
 

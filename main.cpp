@@ -10,7 +10,7 @@
 //HELPER FUNCTION 2: DRAWWINDHUD: Just draws the wind direction in the top right corner for the user to see before they launch. in main youll see that wind changes every 3 shots. 
 //HELPER FUNCTION 3: DRAWWORLD: This is where I drew the whole scene, the sky, the ground, etc. 
 
-//another helper function to draw the wind arrow for the user BEFORE they take their shot. 
+//helper function to draw the wind arrow for the user. Wind changes every 3 shots. 
 void DrawWindHUD(Vector3 wind, int screenWidth) {           //wind will be drawn relative to screen width so it doesnt break if we change the window size for different computers
     Vector2 center = { (float)screenWidth - 80.0f, 90.0f };   // top-right corner
     float radius = 38.0f;                                      // arrow length
@@ -45,7 +45,7 @@ void DrawWindHUD(Vector3 wind, int screenWidth) {           //wind will be drawn
 
     DrawText(TextFormat("%.1f m/s", speed), (int)center.x - 30, (int)center.y + radius + 14, 18, BLACK);
 }
-//Helper function 3, drawworld, self explanatory
+//Helper function, drawworld, self explanatory, it draws the world! 
 void DrawWorld() {
     // ground plane: a big flat green field at y=0, like grass! 
     DrawPlane({0.0f, 0.0f, 0.0f}, {1000.0f, 1000.0f}, (Color){ 76, 124, 60, 255 });
@@ -88,8 +88,6 @@ int main() {
     ball.position = cannon.pivot; //cannon ball is in the barrel!
     ball.active = false; //dormant ball, not simulated until fired
 
-
-
    
     ball.GenerateWind(); //generate wind for the first 6 shots
     int shotsSinceWind = 0; //counts shots fired under current wind. Wind changes every 6 shots.
@@ -107,7 +105,11 @@ int main() {
                 shotsSinceWind = 0; // and reset the counter!
             }
         }
-
+ //   TEMP dev-only aim test so I can swing the barrel myself — REMOVE before merge (Sid owns the arrows)
+         if (IsKeyDown(KEY_LEFT))  cannon.azimuth   -= 60.0f * dt;
+         if (IsKeyDown(KEY_RIGHT)) cannon.azimuth   += 60.0f * dt;
+         if (IsKeyDown(KEY_UP))    cannon.elevation += 60.0f * dt;
+         if (IsKeyDown(KEY_DOWN))  cannon.elevation -= 60.0f * dt;
         if (ball.active) ball.Update(dt);   // only simulate a ball that's in flight
 
 

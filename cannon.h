@@ -2,12 +2,12 @@
 #include "raylib.h"
 #include "Projectile.h"
 
-// Hey Sid, read this first, this is where a lot of your work will be, the aim seam, connecting the cannon to instructions
-// Right now it just loads the cannon pointing straight (azimuth 0) and at a 45 degree angle
+// Hey Sid, read this first, this is where a lot of your work will be, connecting the cannon to key instructions
+// Right now it just loads the cannon pointing straight (azimuth 0) and at a 30 degree angle, power is 20 m/s
 // You will code stuff that writes to azimuth / elevation / power from the users input.
 // The barrel and the launch both read these — nothing else to wire up.
 // To fire: call cannon.Fire(ball) on spacebar release.
-//youll have to do the key input stuff in the while loop in main, so it updates the position of the cannon every dt based on keyboard inputs
+// you'll have to do the key input stuff in the while loop in main, so it updates the position of the cannon every dt based on keyboard inputs
 
 class Cannon {
 public:

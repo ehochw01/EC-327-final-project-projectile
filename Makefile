@@ -1,15 +1,16 @@
 CXX = g++
-CXXFLAGS = -std=c++20 -I/opt/homebrew/include
+CXXFLAGS = -std=c++20 -Iinclude -I/opt/homebrew/include
 LDFLAGS = -L/opt/homebrew/lib -lraylib -framework OpenGL -framework Cocoa -framework IOKit
 
-SRCS = main.cpp PhysicsBody.cpp Projectile.cpp Cannon.cpp Target.cpp
+SRCDIR = src
+SRCS = $(SRCDIR)/main.cpp $(SRCDIR)/PhysicsBody.cpp $(SRCDIR)/Projectile.cpp $(SRCDIR)/Cannon.cpp $(SRCDIR)/Target.cpp
 OBJS = $(SRCS:.cpp=.o)
 TARGET = sim
 
 $(TARGET): $(OBJS)
 	$(CXX) $(OBJS) -o $(TARGET) $(LDFLAGS)
 
-%.o: %.cpp
+$(SRCDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:

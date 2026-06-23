@@ -118,19 +118,19 @@ void DrawPowerBar(float power, int screenWidth, int screenHeight) {
 
 //helper function to spawn debris, takes in a vector of debris objects and shoots them out from some chosen position, to be determined by the location of a target and activated only when struck
 void spawnDebris(std::vector<Debris>& debris, Vector3 origin) { //this function takes a vector of debris objects, and shoots them out from some chosen position, to be determined by the location of a target and activated only when struck
-    int count = 50; //number of debris objects to spawn
+    int count = 100; //number of debris objects to spawn
     const float speed = 2.0f;   // <-- master knob: 1.0 = current, higher = faster debris
     for (int i = 0; i < count; i++) {
         Debris piece;
         piece.position = origin; //spawn at the given position vector 
-        piece.radius = GetRandomValue(15, 35) / 100.0f;   // radius 0.15..0.35, varied
+        piece.radius = GetRandomValue(10, 30) / 100.0f;   // radius 0.15..0.35, varied
         int r = GetRandomValue(130, 255);  //random pink shade
         int g = GetRandomValue(0, 100);    //random bright shade
         int b = GetRandomValue(100, 200);  //random bright blue shade
         piece.color = (Color){ (unsigned char)r, (unsigned char)g, (unsigned char)b, 255 }; //casts the ints tha random generates and unsigned char (0-255
         piece.velocity = {
             speed * GetRandomValue(-90, -30) / 10.0f, //random x velocity between -6 and 6 m/s, division is because random number gen doesnt give floats
-            GetRandomValue(0,150) / 10.0f, //random y velocity between 2 and 8, positive so it "erupts" upwards, recent change to make it more satisfying
+            GetRandomValue(20,120) / 10.0f, //random y velocity between 2 and 8, positive so it "erupts" upwards, recent change to make it more satisfying
             GetRandomValue(-50,50) / 10.0f  //random z velocity between -6 and 6 m/s, outward
         };
         debris.push_back(piece); // didn't have this at first and it didnt work, this is what adds the finished fragment to the original vector

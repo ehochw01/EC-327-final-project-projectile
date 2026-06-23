@@ -172,8 +172,8 @@ int main() {
     ball.active = false; //dormant ball, not simulated until fired
 
     Target target; //target is a sphere, will be drawn at a random location in the world.
-    randomizeTarget(target);
-   
+    target.position = { 50.0f, 15.0f, 0.0f }; //target is at 50m downrange, on the ground, radius is 0.5m so y=0.5 to sit on the ground
+
     ball.GenerateWind(); //generate wind for the first 6 shots
     int shotsSinceWind = 0; //counts shots fired under current wind. Wind changes every 6 shots.
 

@@ -24,7 +24,7 @@ void DrawWindHUD(Vector3 wind, int screenWidth) {
     // world +X (downrange, away) -> screen UP
     // world -Z (viewer's right)  -> screen RIGHT
     float dirX = wind.z;   // screen x-component for wind
-    float dirY = wind.x;   // screen y-component for wind
+    float dirY = -wind.x;   // screen y-component for wind
 
     // draws wind dial ring to screen, with a radius slightly larger than the arrow length.
     DrawCircleLines((int)center.x, (int)center.y, radius + 10, GRAY);   
@@ -123,14 +123,14 @@ void spawnDebris(std::vector<Debris>& debris, Vector3 origin) { //this function 
         Debris piece;
         piece.position = origin; //spawn at the given position vector 
         piece.radius = GetRandomValue(15, 35) / 100.0f;   // radius 0.15..0.35, varied
-        int r = GetRandomValue(130, 255);
-        int g = GetRandomValue(0, 100);
-        int b = GetRandomValue(100, 200);
+        int r = GetRandomValue(130, 255);  //random pink shade
+        int g = GetRandomValue(0, 100);    //random bright shade
+        int b = GetRandomValue(100, 200);  //random bright blue shade
         piece.color = (Color){ (unsigned char)r, (unsigned char)g, (unsigned char)b, 255 }; //casts the ints tha random generates and unsigned char (0-255
         piece.velocity = {
-            GetRandomValue(-100,100) / 10.0f, //random x velocity between -6 and 6 m/s, division is because random number gen doesnt give floats
+            GetRandomValue(-50,50) / 10.0f, //random x velocity between -6 and 6 m/s, division is because random number gen doesnt give floats
             GetRandomValue(100,150) / 10.0f, //random y velocity between 2 and 8, positive so it "erupts" upwards, recent change to make it more satisfying
-            GetRandomValue(-100,100) / 10.0f  //random z velocity between -6 and 6 m/s, outward
+            GetRandomValue(-50,50) / 10.0f  //random z velocity between -6 and 6 m/s, outward
         };
         debris.push_back(piece); // didn't have this at first and it didnt work, this is what adds the finished fragment to the original vector
     }

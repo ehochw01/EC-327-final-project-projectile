@@ -3,11 +3,14 @@
 #include "Entity.h"
 
 class Target : public Entity {
-    public: 
+    public:
         void Draw() override;
         void Update(float dt) override;
+        // returns true only on the single frame the ball crosses the disk's face,
+        // so a ball passing through can't register as many collisions in a row.
+        bool CheckHit(Vector3 prevBallPos, Vector3 ballPos, float ballRadius) const;
+        float radius{10.0f};    //disk radius in meters, can change
     private:
-        float radius{10.0f};    //sphere radius in meters, can change
         Color color{RED};     //red targets
 };
 

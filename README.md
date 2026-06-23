@@ -10,6 +10,24 @@ To compile and run:
 
 ```make && ./sim```
 
+## Live reload during development
+
+To automatically rebuild and rerun the simulation every time you save a source or header file, use the `watch` target.
+
+First install [entr](https://eradman.com/entrproject/) (a lightweight file watcher):
+
+```brew install entr```
+
+Then run:
+
+```make watch```
+
+This watches all files in `src/` and `include/`. Whenever you save a change, the running sim closes, only the changed files recompile, and the sim relaunches. Press `Ctrl-C` to stop watching.
+
+Notes:
+- If a build fails, the old sim won't relaunch — the compiler error shows in the terminal and the watcher keeps waiting for your next save.
+- If you *add* a brand-new source file, restart `make watch` so it picks up the new file (and remember to add it to `SRCS` in the Makefile).
+
 ## How to play
 
 Use your computer arrow keys (UP, DOWN, LEFT, RIGHT) to change the aim direction of the cannon.

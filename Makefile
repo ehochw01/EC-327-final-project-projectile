@@ -16,4 +16,11 @@ $(SRCDIR)/%.o: $(SRCDIR)/%.cpp
 clean:
 	rm -f $(OBJS) $(TARGET)
 
-.PHONY: clean
+# Auto-rebuild and rerun the sim whenever a source or header changes.
+# Requires entr: brew install entr
+watch:
+	@command -v entr >/dev/null 2>&1 || { echo "entr not found. Install it with: brew install entr"; exit 1; }
+	@echo "Watching $(SRCDIR)/ and include/ — save a file to rebuild & rerun. Ctrl-C to quit."
+	@ls $(SRCDIR)/*.cpp include/*.h | entr -r sh -c '$(MAKE) && ./$(TARGET)'
+
+.PHONY: clean watch

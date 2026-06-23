@@ -292,6 +292,7 @@ int main() {
         if (collision) {
             spawnDebris(debris, ball.position, target.GetColor()); //spawn debris where the ball actually struck the disk
             collision = false; //reset collision flag to avoid repeated spawning
+            ball.active = false; //stop simulating/drawing the ball now that it's struck something
             targetVisible = false;                                   // target "explodes" and disappears on impact
             targetRespawnTimer = Constants::TARGET_RESPAWN_DELAY;     // ...and stays gone for a short pause
             score++; //increment score when target is hit
@@ -321,7 +322,7 @@ int main() {
 
                 cannon.Draw();   //draw the cannon at the origin, barrel points along the current aim
 
-                ball.Draw(); //draw the ball at its current location, everytime this is hit in each loop, it uses the new updated ball position as derived by the math in the physicsbody source code.
+                if (ball.active) ball.Draw(); //draw the ball only while it's in flight; hidden once it strikes something
                 if (targetVisible) target.Draw(); //draw the target at its location, hidden during the brief respawn pause
                 for (Debris& piece : debris) piece.Draw();   // all fragments, must be by reference! early mistake
 

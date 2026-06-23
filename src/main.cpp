@@ -118,23 +118,31 @@ void DrawPowerBar(float power, int screenWidth, int screenHeight) {
 
 //helper function to spawn debris, takes in a vector of debris objects and shoots them out from some chosen position, to be determined by the location of a target and activated only when struck
 void spawnDebris(std::vector<Debris>& debris, Vector3 origin) { //this function takes a vector of debris objects, and shoots them out from some chosen position, to be determined by the location of a target and activated only when struck
-    int count = 50; //number of debris objects to spawn
-    const float speed = 2.0f;   // <-- master knob: 1.0 = current, higher = faster debris
+    int count = 100; //number of debris objects to spawn
+    const float debrisSpeed = 3.5f;   // <-- master knob: 1.0 = current, higher = faster debris
     for (int i = 0; i < count; i++) {
         Debris piece;
         piece.position = origin; //spawn at the given position vector 
-        piece.radius = GetRandomValue(15, 35) / 100.0f;   // radius 0.15..0.35, varied
+        piece.radius = GetRandomValue(10, 30) / 100.0f;   // radius 0.15..0.35, varied
         int r = GetRandomValue(130, 255);  //random pink shade
         int g = GetRandomValue(0, 100);    //random bright shade
         int b = GetRandomValue(100, 200);  //random bright blue shade
         piece.color = (Color){ (unsigned char)r, (unsigned char)g, (unsigned char)b, 255 }; //casts the ints tha random generates and unsigned char (0-255
         piece.velocity = {
-            speed * GetRandomValue(-90, -30) / 10.0f, //random x velocity between -6 and 6 m/s, division is because random number gen doesnt give floats
-            GetRandomValue(0,150) / 10.0f, //random y velocity between 2 and 8, positive so it "erupts" upwards, recent change to make it more satisfying
+            debrisSpeed * GetRandomValue(-90, -30) / 10.0f, //random x velocity between -6 and 6 m/s, division is because random number gen doesnt give floats
+            GetRandomValue(20,120) / 10.0f, //random y velocity between 2 and 8, positive so it "erupts" upwards, recent change to make it more satisfying
             GetRandomValue(-50,50) / 10.0f  //random z velocity between -6 and 6 m/s, outward
         };
         debris.push_back(piece); // didn't have this at first and it didnt work, this is what adds the finished fragment to the original vector
     }
+}
+
+// pick a fresh random spot for the target somewhere downrange
+void randomizeTarget(Target& target) {
+    float x = 50.0f;   // 40..150m downrange (+X)
+    float y = (float)GetRandomValue(5, 20);    // 5..30m up
+    float z = (float)GetRandomValue(-20, 20);   // -20..20m across the lane
+    target.position = { x, y, z };
 }
 
 int main() {
@@ -164,12 +172,14 @@ int main() {
     ball.active = false; //dormant ball, not simulated until fired
 
     Target target; //target is a sphere, will be drawn at a random location in the world.
-    target.position = { 50.0f, 15.0f, 0.0f }; //target is at 50m downrange, on the ground, radius is 0.5m so y=0.5 to sit on the ground
+    randomizeTarget(target);
    
     ball.GenerateWind(); //generate wind for the first 6 shots
     int shotsSinceWind = 0; //counts shots fired under current wind. Wind changes every 6 shots.
 
     std::vector<Debris> debris; //vector to hold debris objects, will be filled when target is hit
+
+    bool collision = false; //flag to indicate if the ball has hit the target, initially false
  //this is our mainloop, 
     while (!WindowShouldClose()) {    //will be true until we hit escape key, only way to end the sim!
         float fTime = GetFrameTime(); //seconds since last frame, in our case 1/60 secs, then uses this to feed the physics engine
@@ -198,9 +208,20 @@ int main() {
 
         }
 
+        Vector3 prevBallPos = ball.position;   // remember where the ball was before integrating this frame
         if (ball.active) ball.Update(fTime);   // only simulate a ball in flight
+
+        // disk hit test: true only on the frame the ball crosses the target's face (no repeated hits)
+        collision = ball.active && target.CheckHit(prevBallPos, ball.position, ball.radius);
+
         for (Debris& piece : debris) {
             piece.Update(fTime);   // gravity + bounce, all inherited
+        }
+
+        if (collision) {
+            spawnDebris(debris, ball.position); //spawn debris where the ball actually struck the disk
+            collision = false; //reset collision flag to avoid repeated spawning
+            randomizeTarget(target); //move the target to a new random location
         }
 
         BeginDrawing();

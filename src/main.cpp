@@ -296,7 +296,7 @@ int main() {
             targetRespawnTimer = Constants::TARGET_RESPAWN_DELAY;     // ...and stays gone for a short pause
             score++; //increment score when target is hit
             if (turnCount % 3 == 0) {
-                target.RandomizeColor(); //change the color of the target to make it more visually interesting
+                target.ChangeColor(); //change the color of the target to make it more visually interesting
                 target.Shrink(); 
                 centerTargetPosition(target); //center the target after shrinking
             } else {

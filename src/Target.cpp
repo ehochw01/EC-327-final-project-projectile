@@ -21,14 +21,11 @@ void Target::Shrink() {
     }
 }
 
-void Target::RandomizeColor() {
+void Target::ChangeColor() {
     // standard raylib colors, picked so the target stays visible against the
     // grass and sky: no GREEN/LIME/DARKGREEN, no SKYBLUE/BLUE
-    static const Color kPalette[] = {
-        RED, ORANGE, YELLOW, GOLD, PINK, MAGENTA, PURPLE, VIOLET, MAROON, BROWN, BEIGE, DARKBLUE
-    };
-    constexpr int kPaletteSize = sizeof(kPalette) / sizeof(kPalette[0]);
-    color = kPalette[GetRandomValue(0, kPaletteSize - 1)];
+    ColorIndex = (ColorIndex + 1) % (sizeof(kPalette));
+    color = kPalette[ColorIndex];
 }
 
 bool Target::CheckHit(Vector3 prevBallPos, Vector3 ballPos, float ballRadius) const {

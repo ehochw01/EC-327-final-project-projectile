@@ -9,10 +9,15 @@ class Target : public Entity {
         // returns true only on the single frame the ball crosses the disk's face,
         // so a ball passing through can't register as many collisions in a row.
         bool CheckHit(Vector3 prevBallPos, Vector3 ballPos, float ballRadius) const;
-        void RandomizeColor();   // picks a new random color for the target
+        void ChangeColor();   // picks a new random color for the target
+        Color GetColor() const { return color; }
         void Shrink();
         float radius{10.0f};    //disk radius in meters, can change
     private:
-        Color color{RED};     //red targets
+        static constexpr Color kPalette[] = {
+            RED, ORANGE, PINK, MAGENTA, PURPLE, VIOLET, MAROON, BROWN, BEIGE, DARKBLUE, GOLD,
+        };
+        int ColorIndex{0};   // index into the palette for the current color
+        Color color{kPalette[ColorIndex]};     //red targets
 };
 

@@ -16,7 +16,7 @@ float Cannon::getLaunchSpeed() const {
 // left/right, degrees, range -90 to 90
 void Cannon::incrAzimuth(float frameTime) {
     float temp = _azimuth;
-    temp += 60.0f *frameTime;
+    temp += ROTATION_RATE *frameTime;
     if (temp >= AMIN && temp <= AMAX) {
         _azimuth = temp;
     }
@@ -25,7 +25,7 @@ void Cannon::incrAzimuth(float frameTime) {
 // left/right, degrees, range -90 to 90
 void Cannon::decrAzimuth(float frameTime) {
     float temp = _azimuth;
-    temp -= 60.0f *frameTime;
+    temp -= ROTATION_RATE *frameTime;
     if (temp >= AMIN && temp <= AMAX) {
         _azimuth = temp;
     }
@@ -34,7 +34,7 @@ void Cannon::decrAzimuth(float frameTime) {
 // up/down, degrees, range 0 to 85
 void Cannon::incrElevation(float frameTime) {
     float temp = _elevation;
-    temp += 60.0f *frameTime;
+    temp += ROTATION_RATE *frameTime;
     if (temp >= EMIN && temp <= EMAX) {
         _elevation = temp;
     }
@@ -42,7 +42,7 @@ void Cannon::incrElevation(float frameTime) {
 
 void Cannon::decrElevation(float frameTime) {
     float temp = _elevation;
-    temp -= 60.0f *frameTime;
+    temp -= ROTATION_RATE *frameTime;
     if (temp >= EMIN && temp <= EMAX) {
         _elevation = temp;
     }

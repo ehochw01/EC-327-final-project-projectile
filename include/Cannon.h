@@ -28,8 +28,9 @@ public:
 
 
 private:
+    static constexpr float ROTATION_RATE = 30.0f;   // degrees/sec for azimuth + elevation incr/decr
     Vector3 pivot   = {0.0f, 1.0f, 0.0f};   // barrel hinge + launch point
     float _azimuth   = 0.0f;        // left/right, degrees, range -90 to 90
-    float _elevation = 30.0f;       // up/down, degrees, range 0 to 85
+    float _elevation = 25.0f;       // up/down, degrees, range 0 to 85
     float _launchSpeed = PMIN;       // launch speed m/s, range 0 to 100 (spacebar hold)
 };

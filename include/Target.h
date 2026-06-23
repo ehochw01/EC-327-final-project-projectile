@@ -15,7 +15,7 @@ class Target : public Entity {
         float radius{10.0f};    //disk radius in meters, can change
     private:
         static constexpr Color kPalette[] = {
-            RED, ORANGE, PINK, MAGENTA, PURPLE, VIOLET, MAROON, BROWN, BEIGE, DARKBLUE, GOLD,
+            RED, ORANGE, PINK, GOLD,MAGENTA, PURPLE, VIOLET, MAROON, BROWN, BEIGE, DARKBLUE, 
         };
         int ColorIndex{0};   // index into the palette for the current color
         Color color{kPalette[ColorIndex]};     //red targets

@@ -152,7 +152,7 @@ void DrawWorld(bool isNight) {
     // sky objects — sun and clouds during the day, moon at night
     if (!isNight) {
         // big yellow sun high in the sky
-        DrawSphere({200.0f, 110.0f, -110.0f}, 20.0f, YELLOW);
+        DrawSphere({200.0f, 850.0f, -120.0f}, 20.0f, YELLOW);
 
         // cloud clusters: groups of overlapping white spheres
         Color cloud = {255, 255, 255, 220};
@@ -167,8 +167,8 @@ void DrawWorld(bool isNight) {
         DrawSphere({175.0f, 85.0f, -20.0f}, 9.0f, cloud);
         DrawSphere({185.0f, 80.0f, -16.0f}, 7.0f, cloud);
     } else {
-        // pale moon high in the sky
-        DrawSphere({150.0f, 70.0f, -80.0f}, 15.0f, (Color){240, 240, 220, 255});
+        // pale moon low in the sky
+        DrawSphere({150.0f, 70.0f, -120.0f}, 15.0f, (Color){240, 240, 220, 255});
     }
 }
 
@@ -354,6 +354,29 @@ int main() {
             if (isNight) ClearBackground((Color){ 15, 15, 40, 255 });
             else         ClearBackground((Color){ 135, 206, 235, 255 });
 
+            // twinkling stars — drawn BEFORE the 3D scene so mountains/trees paint over them
+            if (isNight) {
+                float t = (float)GetTime();
+                for (int i = 0; i < STAR_COUNT; i++) {
+                    // each star blinks once every ~8-17 seconds (varies per star)
+                    // the blink itself is a quick 0.3s dip to ~10% brightness
+                    float period = 8.0f + stars[i].phase * 1.5f;
+                    float offset = stars[i].x * 0.34f + stars[i].y * 0.69f;
+                    float cycle = fmodf(t + offset, period);
+                    float blinkLen = 1.5f;
+                    float alpha;
+                    if (cycle < blinkLen) {
+                        float progress = cycle / blinkLen;
+                        alpha = 0.1f + 0.9f * fabsf(cosf(progress * 3.14159f));
+                    } else {
+                        alpha = 1.0f;
+                    }
+                    Color c = stars[i].color;
+                    c.a = (unsigned char)(alpha * 255);
+                    DrawCircle(stars[i].x, stars[i].y, 1.5f, c);
+                }
+            }
+
             BeginMode3D(camera);
                 DrawWorld(isNight);
 
@@ -365,18 +388,6 @@ int main() {
 
                 DrawSphere({0,0,0}, 0.3f, RED);  //small sphere to mark the center of the grid.
             EndMode3D(); //no longer drawing in the 3d world after this, but on the flat 2d screen
-
-            // twinkling stars — 2D dots drawn over the sky background, only at night
-            if (isNight) {
-                float t = (float)GetTime();
-                for (int i = 0; i < STAR_COUNT; i++) {
-                    // sin wave with per-star phase offset gives each star its own twinkle rhythm
-                    float alpha = 0.5f + 0.5f * sinf(t * 1.5f + stars[i].phase);
-                    Color c = stars[i].color;
-                    c.a = (unsigned char)(alpha * 255);
-                    DrawCircle(stars[i].x, stars[i].y, 1.5f, c);
-                }
-            }
 
             Color textCol = isNight ? WHITE : DARKGRAY;
 

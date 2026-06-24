@@ -67,3 +67,16 @@ int Target::CheckHit(Vector3 prevBallPos, Vector3 ballPos, float ballRadius) con
     if (dist > radius * 0.2f) return 4;
     return 5;
 };
+
+bool Target::Missed(Vector3 prevBallPos, Vector3 ballPos, float ballVelocityX) const {
+    // flew past: crossed the downrange plane this frame (CheckHit covers the on-disk hit case)
+    bool crossedPlane = (prevBallPos.x <= position.x && ballPos.x >= position.x);
+    if (crossedPlane) return true;
+
+    // fell short: still behind the target and no longer moving toward it. since wind is the
+    // only thing accelerating x and it's constant for the whole shot, the ball can never make
+    // it to the target's plane from here, so the shot is a guaranteed miss.
+    if (ballPos.x < position.x && ballVelocityX <= 0.0f) return true;
+
+    return false;
+};

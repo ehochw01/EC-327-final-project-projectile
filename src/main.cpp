@@ -10,7 +10,7 @@
 using Constants::DEBRIS_COLOR_VARIATION;
 
 // screen-space star for the twinkling night sky, stored in an array before the game loop
-struct Star {
+struct Starry {
     int x, y;
     float phase;   // offset so each star twinkles on its own cycle
     Color color;   // mostly white, occasional red/blue/yellow
@@ -94,6 +94,8 @@ void DrawWindHUD(Vector3 wind, int screenWidth, bool isNight) {
 
     DrawText(tailStr, (int)(dotX + dotRadius + 3), textY, fontSize, textCol);
 }
+
+
 //Helper function, drawworld — draws ground, scenery, and sky objects
 // isNight is decided once at startup and passed in each frame
 void DrawWorld(bool isNight) {
@@ -135,6 +137,17 @@ void DrawWorld(bool isNight) {
     DrawCylinder({160.0f, 0.0f, -25.0f}, 0.5f, 0.3f, 7.0f, 8, trunk);
     DrawSphere({160.0f, 8.8f, -25.0f}, 3.0f, leaves);
 
+    // tree shadows — dark discs on the ground, only during the day
+    if (!isNight) {
+        Color shadow = {0, 0, 0, 60};
+        DrawCylinder({30.0f,  0.02f, 25.0f},  3.5f, 3.5f, 0.01f, 10, shadow);
+        DrawCylinder({70.0f,  0.02f, -30.0f}, 4.5f, 4.5f, 0.01f, 10, shadow);
+        DrawCylinder({120.0f, 0.02f, 28.0f},  3.0f, 3.0f, 0.01f, 10, shadow);
+        DrawCylinder({45.0f,  0.02f, -35.0f}, 4.0f, 4.0f, 0.01f, 10, shadow);
+        DrawCylinder({90.0f,  0.02f, 32.0f},  5.0f, 5.0f, 0.01f, 10, shadow);
+        DrawCylinder({160.0f, 0.02f, -25.0f}, 3.5f, 3.5f, 0.01f, 10, shadow);
+    }
+
     // boulders scattered off to the sides
     Color stone = isNight ? (Color){80, 80, 80, 255} : (Color){140, 140, 140, 255};
     DrawSphere({25.0f,  0.9f,  18.0f}, 1.5f, stone);
@@ -151,24 +164,64 @@ void DrawWorld(bool isNight) {
 
     // sky objects — sun and clouds during the day, moon at night
     if (!isNight) {
-        // big yellow sun high in the sky
-        DrawSphere({200.0f, 850.0f, -120.0f}, 20.0f, YELLOW);
+        // big yellow sun — y=110 keeps it within the camera's ~120 visible height at this distance
+        DrawSphere({200.0f, 90.0f, -120.0f}, 15.0f, YELLOW);
 
-        // cloud clusters: groups of overlapping white spheres
-        Color cloud = {255, 255, 255, 220};
-        DrawSphere({60.0f,  80.0f, -48.0f}, 8.0f, cloud);
-        DrawSphere({65.0f,  80.0f, -43.0f}, 7.0f, cloud);
-        DrawSphere({55.0f,  80.0f, -45.0f}, 6.0f, cloud);
+        // clouds — flat bottoms, bumpy tops, wide horizontal spread
+        // KEY: z controls left/right. keep |z| under ~25 for close clouds (x<100),
+        //      under ~40 for mid-range, so they stay within the camera's horizontal FOV
+        Color cloudTop = {255, 255, 255, 230};
+        Color cloudMid = {240, 240, 245, 220};
+        Color cloudBot = {210, 215, 225, 200};
 
-        DrawSphere({120.0f, 70.0f, -45.0f}, 10.0f, cloud);
-        DrawSphere({125.0f, 70.0f, -28.0f}, 8.0f,  cloud);
-        DrawSphere({120.0f, 70.0f, -34.0f}, 7.0f,  cloud);
+        // cloud 1 — big cumulus, right side
+        DrawSphere({80.0f, 78.0f, -90.0f}, 7.0f, cloudBot);
+        DrawSphere({87.0f, 78.0f, -87.0f}, 8.0f, cloudBot);
+        DrawSphere({95.0f, 78.0f, -84.0f}, 7.0f, cloudBot);
+        DrawSphere({83.0f, 82.0f, -89.0f}, 7.0f, cloudMid);
+        DrawSphere({90.0f, 83.0f, -86.0f}, 8.0f, cloudMid);
+        DrawSphere({97.0f, 81.0f, -83.0f}, 6.0f, cloudMid);
+        DrawSphere({86.0f, 86.0f, -88.0f}, 5.0f, cloudTop);
+        DrawSphere({92.0f, 88.0f, -85.0f}, 6.0f, cloudTop);
 
-        DrawSphere({175.0f, 85.0f, -20.0f}, 9.0f, cloud);
-        DrawSphere({185.0f, 80.0f, -16.0f}, 7.0f, cloud);
+        // cloud 2 — wide, far left
+        DrawSphere({130.0f, 72.0f, 100.0f}, 8.0f, cloudBot);
+        DrawSphere({138.0f, 72.0f, 103.0f}, 9.0f, cloudBot);
+        DrawSphere({146.0f, 72.0f, 106.0f}, 7.0f, cloudBot);
+        DrawSphere({134.0f, 77.0f, 101.0f}, 8.0f, cloudMid);
+        DrawSphere({142.0f, 78.0f, 104.0f}, 9.0f, cloudMid);
+        DrawSphere({138.0f, 82.0f, 102.0f}, 6.0f, cloudTop);
+        DrawSphere({144.0f, 81.0f, 105.0f}, 7.0f, cloudTop);
+
+        // cloud 3 — wisp, far right (shifted away from the sun)
+        DrawSphere({120.0f, 85.0f, -130.0f}, 6.0f, cloudBot);
+        DrawSphere({127.0f, 85.0f, -127.0f}, 7.0f, cloudBot);
+        DrawSphere({123.0f, 89.0f, -129.0f}, 5.0f, cloudMid);
+        DrawSphere({129.0f, 88.0f, -126.0f}, 4.0f, cloudTop);
+
+        // cloud 4 — cumulus, left
+        DrawSphere({70.0f, 68.0f, 60.0f}, 7.0f, cloudBot);
+        DrawSphere({77.0f, 68.0f, 63.0f}, 8.0f, cloudBot);
+        DrawSphere({73.0f, 73.0f, 61.0f}, 7.0f, cloudMid);
+        DrawSphere({79.0f, 72.0f, 64.0f}, 6.0f, cloudMid);
+        DrawSphere({75.0f, 77.0f, 62.0f}, 5.0f, cloudTop);
+
+        // cloud 5 — long streak, center
+        DrawSphere({170.0f, 80.0f, -10.0f}, 6.0f, cloudBot);
+        DrawSphere({178.0f, 80.0f, -7.0f},  7.0f, cloudBot);
+        DrawSphere({186.0f, 80.0f, -4.0f},  6.0f, cloudBot);
+        DrawSphere({194.0f, 80.0f, -1.0f},  5.0f, cloudBot);
+        DrawSphere({174.0f, 84.0f, -8.0f},  6.0f, cloudMid);
+        DrawSphere({183.0f, 85.0f, -5.0f},  7.0f, cloudMid);
+        DrawSphere({180.0f, 88.0f, -6.0f},  5.0f, cloudTop);
+
+        // cloud 6 — small puff, far left
+        DrawSphere({240.0f, 82.0f, 130.0f}, 5.0f, cloudBot);
+        DrawSphere({246.0f, 82.0f, 133.0f}, 6.0f, cloudBot);
+        DrawSphere({243.0f, 86.0f, 131.0f}, 5.0f, cloudTop);
     } else {
         // pale moon low in the sky
-        DrawSphere({150.0f, 70.0f, -120.0f}, 15.0f, (Color){240, 240, 220, 255});
+        DrawSphere({150.0f, 70.0f, -120.0f}, 12.0f, (Color){240, 240, 220, 255});
     }
 }
 
@@ -238,7 +291,7 @@ int main() {
 
     // pre-generate stars for the night sky (only drawn when isNight is true)
     const int STAR_COUNT = 200;
-    Star stars[200];
+    Starry stars[200];
     for (int i = 0; i < STAR_COUNT; i++) {
         stars[i].x = GetRandomValue(0, screen_width);
         stars[i].y = GetRandomValue(0, screen_height / 2);  // upper half of screen only
@@ -387,6 +440,8 @@ int main() {
                 for (Debris& piece : debris) piece.Draw();   // all fragments, must be by reference! early mistake
 
                 DrawSphere({0,0,0}, 0.3f, RED);  //small sphere to mark the center of the grid.
+
+
             EndMode3D(); //no longer drawing in the 3d world after this, but on the flat 2d screen
 
             Color textCol = isNight ? WHITE : DARKGRAY;

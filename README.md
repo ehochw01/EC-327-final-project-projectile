@@ -1,6 +1,8 @@
 # Projectile Simulator
 
-![Start screen](images/start_screen.png)
+[![Start screen — click to watch a gameplay video](images/start_screen.png)](https://youtu.be/zXgoBTlb0z8)
+
+▶️ **[Watch a gameplay video on YouTube](https://youtu.be/zXgoBTlb0z8)**
 
 ## How to install
 

@@ -247,9 +247,10 @@ int main() {
     SetTargetFPS(60); //sets the upper limit of the loop at 60 fps
 
     InitAudioDevice();   // must come before loading/playing any audio
-    Music music = LoadMusicStream("music/8bit_music.mp3");   // streamed from disk, not loaded all at once
+    SetAudioStreamBufferSizeDefault(8192);   // larger buffer than the default so a brief frame spike can't starve the stream (stutter)
+    Music music = LoadMusicStream("music/8bit_music.ogg");   // streamed from disk, not loaded all at once. ogg loops more seamlessly than mp3
     music.looping = true;                                    // loop the background track forever
-    PlayMusicStream(music);
+    // music doesn't start at launch; it kicks in the first time the player hits space (see loop below)
 
     int turnCount = 0; //keeps track of how many shots have been fired, used to change wind every 3 shots
     int hitCount = 0;  //keeps track of how many hits the player has scored, used to change target color and size every 3 hits
@@ -290,13 +291,19 @@ int main() {
     bool missCounted = false;   // true once the current shot has been tallied as a miss, so we only count it once while the ball flies on
 
     bool muted = false;   // music on/off, toggled by the mute button in the bottom-right
+    bool musicStarted = false;   // music begins on the player's first space press, not at launch
     // mute button rectangle, anchored to the bottom-right corner
     Rectangle muteButton = { (float)screen_width - 100.0f, (float)screen_height - 50.0f, 90.0f, 35.0f };
 
     while (!WindowShouldClose()) {    // will be true until we hit escape key
         float fTime = GetFrameTime(); // seconds since last frame, in our case 1/60 secs, then uses this to feed the physics engine
 
-        UpdateMusicStream(music);   // keeps the streamed audio buffer fed each frame
+        // start the soundtrack the first time the player hits space, then keep its buffer fed each frame
+        if (!musicStarted && IsKeyPressed(KEY_SPACE)) {
+            PlayMusicStream(music);
+            musicStarted = true;
+        }
+        if (musicStarted) UpdateMusicStream(music);   // keeps the streamed audio buffer fed each frame
 
         // mute toggle: clicking the button flips muted and drops/restores the volume.
         // handled here (outside the gameplay block) so it still works on the game over screen.

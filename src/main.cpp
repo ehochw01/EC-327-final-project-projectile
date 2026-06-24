@@ -24,25 +24,23 @@ int ClampColorChannel(int value) {
 }
 
 //helper function to draw the wind arrow for the user. Wind changes every 3 shots. 
-void DrawWindHUD(Vector3 wind, int screenWidth) {          
-    //wind will be drawn relative to screen width 
-    Vector2 center = { (float)screenWidth - 80.0f, 90.0f };   // top-right corner
-    // arrow length
-    float radius = 38.0f;                                      
+void DrawWindHUD(Vector3 wind, int screenWidth, bool isNight) {
+    Color textCol = isNight ? WHITE : BLACK;
+    Color ringCol = isNight ? LIGHTGRAY : GRAY;
+    Vector2 center = { (float)screenWidth - 80.0f, 90.0f };
+    float radius = 38.0f;
 
-    // wind magnitude (no y down or up wind)
-    float windSpeed = sqrtf(wind.x * wind.x + wind.z * wind.z);   
+    float windSpeed = sqrtf(wind.x * wind.x + wind.z * wind.z);
 
     // player looks down +X. On their screen:
     // world +X (downrange, away) -> screen UP
     // world -Z (viewer's right)  -> screen RIGHT
-    float dirX = wind.z;   // screen x-component for wind
-    float dirY = -wind.x;   // screen y-component for wind
+    float dirX = wind.z;
+    float dirY = -wind.x;
 
-    // draws wind dial ring to screen, with a radius slightly larger than the arrow length.
-    DrawCircleLines((int)center.x, (int)center.y, radius + 10, GRAY);   
+    DrawCircleLines((int)center.x, (int)center.y, radius + 10, ringCol);
 
-    DrawText("WIND", (int)center.x - 20, (int)center.y - radius - 34, 16, BLACK);
+    DrawText("WIND", (int)center.x - 20, (int)center.y - radius - 34, 16, textCol);
 
     if (windSpeed > 0.01f) {
         float len = sqrtf(dirX * dirX + dirY * dirY);
@@ -86,20 +84,20 @@ void DrawWindHUD(Vector3 wind, int screenWidth) {
     int textX = (int)center.x - 30;
     int textY = (int)center.y + radius + 14;
 
-    DrawText(wholeStr, textX, textY, fontSize, BLACK);
+    DrawText(wholeStr, textX, textY, fontSize, textCol);
     int wholeWidth = MeasureText(wholeStr, fontSize);
 
     float dotRadius = 2.5f;
     float dotX = textX + wholeWidth + dotRadius + 2;
-    float dotY = textY + fontSize - dotRadius - 2;   // sits on the text baseline
-    DrawCircle((int)dotX, (int)dotY, dotRadius, BLACK);
+    float dotY = textY + fontSize - dotRadius - 2;
+    DrawCircle((int)dotX, (int)dotY, dotRadius, textCol);
 
-    DrawText(tailStr, (int)(dotX + dotRadius + 3), textY, fontSize, BLACK);
+    DrawText(tailStr, (int)(dotX + dotRadius + 3), textY, fontSize, textCol);
 }
 //Helper function, drawworld — draws ground, scenery, and sky objects
 // isNight is decided once at startup and passed in each frame
 void DrawWorld(bool isNight) {
-    // ground plane — darker grass at night
+    // ground plane — (darker grass at night)
     Color grass = isNight ? (Color){30, 50, 25, 255} : (Color){76, 124, 60, 255};
     DrawPlane({0.0f, 0.0f, 0.0f}, {1000.0f, 1000.0f}, grass);
 
@@ -112,7 +110,7 @@ void DrawWorld(bool isNight) {
         DrawCube({ x, 1.0f, -12.0f }, 0.4f, 2.0f, 0.4f, (Color){ 200, 200, 200, 255 });
     }
 
-    // Background scenery:
+    // Foreground/Background scenery:
 
     // trees along the edges, well clear of the firing lane
     // colors darken at night so they read as silhouettes
@@ -144,6 +142,13 @@ void DrawWorld(bool isNight) {
     DrawSphere({55.0f,  0.6f,  22.0f}, 1.0f, stone);
     DrawSphere({140.0f, 1.0f, -18.0f}, 1.8f, stone);
 
+    // distant mountains — darker at night
+    Color mountain = isNight ? (Color){60, 60, 75, 255} : (Color){100, 100, 120, 255};
+    DrawCylinder({300.0f, 0.0f, -190.0f},  0.0f, 60.0f, 80.0f, 6, mountain);
+    DrawCylinder({350.0f, 0.0f, -160.0f},  0.0f, 50.0f, 65.0f, 6, mountain);
+    DrawCylinder({260.0f, 0.0f, -210.0f}, 0.0f, 45.0f, 55.0f, 6, mountain);
+    DrawCylinder({320.0f, 0.0f,  -90.0f},  0.0f, 55.0f, 70.0f, 6, mountain);
+
     // sky objects — sun and clouds during the day, moon at night
     if (!isNight) {
         // big yellow sun high in the sky
@@ -163,31 +168,25 @@ void DrawWorld(bool isNight) {
         DrawSphere({185.0f, 80.0f, -16.0f}, 7.0f, cloud);
     } else {
         // pale moon high in the sky
-        DrawSphere({150.0f, 120.0f, -80.0f}, 15.0f, (Color){240, 240, 220, 255});
+        DrawSphere({150.0f, 70.0f, -80.0f}, 15.0f, (Color){240, 240, 220, 255});
     }
-
-    // distant mountains — darker at night
-    Color mountain = isNight ? (Color){60, 60, 75, 255} : (Color){100, 100, 120, 255};
-    DrawCylinder({300.0f, 0.0f, -190.0f},  0.0f, 60.0f, 80.0f, 6, mountain);
-    DrawCylinder({350.0f, 0.0f, -160.0f},  0.0f, 50.0f, 65.0f, 6, mountain);
-    DrawCylinder({260.0f, 0.0f, -210.0f}, 0.0f, 45.0f, 55.0f, 6, mountain);
-    DrawCylinder({320.0f, 0.0f,  -90.0f},  0.0f, 55.0f, 70.0f, 6, mountain);
 }
 
 // another helper function to draw the power charge bar. Bottom-center, fills red as power climbs 0...100
-void DrawPowerBar(float power, int screenWidth, int screenHeight) {
+void DrawPowerBar(float power, int screenWidth, int screenHeight, bool isNight) {
+    Color textCol = isNight ? WHITE : BLACK;
     int barWidth  = 300;
     int barHeight = 24;
-    int x = screenWidth / 2 - barWidth / 2;     // centered horizontally
-    int y = screenHeight - 60;                   // near the bottom
+    int x = screenWidth / 2 - barWidth / 2;
+    int y = screenHeight - 60;
 
-    float fraction = power / 100.0f;             // 0.0 to 1.0
-    int fillWidth = (int)(barWidth * fraction);  // how much of the bar is filled (how long the second red rectangle is)
+    float fraction = power / 100.0f;
+    int fillWidth = (int)(barWidth * fraction);
 
-    DrawRectangle(x, y, barWidth, barHeight, (Color){ 40, 40, 40, 200 });   // dark background
-    DrawRectangle(x, y, fillWidth, barHeight, RED);                          // red fill
-    DrawRectangleLines(x, y, barWidth, barHeight, BLACK);                    // border
-    DrawText("POWER", x, y - 22, 18, BLACK);                                 // label
+    DrawRectangle(x, y, barWidth, barHeight, (Color){ 40, 40, 40, 200 });
+    DrawRectangle(x, y, fillWidth, barHeight, RED);
+    DrawRectangleLines(x, y, barWidth, barHeight, textCol);
+    DrawText("POWER", x, y - 22, 18, textCol);
 }
 
 // helper function to spawn debris, takes in a vector of debris objects and shoots them out from some chosen position, to be determined by the location of a target and activated only when struck
@@ -223,6 +222,10 @@ void centerTargetPosition(Target& target) {
     target.position = { 50.0f, 15.0f, 0.0f }; // center of the lane
 }
 
+
+
+
+
 int main() {
     const int screen_width = 1280;   //screen dimensions, const since they shouldn't change
     const int screen_height = 720; 
@@ -247,6 +250,8 @@ int main() {
         else if (colorRoll == 2) stars[i].color = {255, 255, 100, 255};  // yellow
         else                     stars[i].color = {255, 255, 255, 255};  // white
     }
+
+
 
     int turnCount = 0; //keeps track of how many shots have been fired, used to change wind every 3 shots
     int hitCount = 0;  //keeps track of how many hits the player has scored, used to change target color and size every 3 hits
@@ -373,8 +378,10 @@ int main() {
                 }
             }
 
-            DrawText("Projectile Sim", 10,10,20,DARKGRAY);  //text, 10, 10 = x y position from left and top edge
-            DrawText(TextFormat("Score: %d", score), 10, 40, 20, DARKGRAY);
+            Color textCol = isNight ? WHITE : DARKGRAY;
+
+            DrawText("Projectile Sim", 10,10,20, textCol);
+            DrawText(TextFormat("Score: %d", score), 10, 40, 20, textCol);
 
             // "+N" popup floats above where the target was hit, for as long as it's gone (TARGET_RESPAWN_DELAY)
             if (!targetVisible) {
@@ -383,16 +390,16 @@ int main() {
                 const char* popupText = TextFormat("+%d", hitPopupValue);
                 int popupFontSize = 30;
                 int popupTextWidth = MeasureText(popupText, popupFontSize);
-                DrawText(popupText, (int)popupScreenPos.x - popupTextWidth / 2, (int)popupScreenPos.y, popupFontSize, BLACK);
+                DrawText(popupText, (int)popupScreenPos.x - popupTextWidth / 2, (int)popupScreenPos.y, popupFontSize, textCol);
             }
             if (turnCount == 0) {
-                DrawText("Use arrow keys to aim, hold space to charge, release to fire", 10, 70, 20, DARKGRAY);
+                DrawText("Use arrow keys to aim, hold space to charge, release to fire", 10, 70, 20, textCol);
             }
 
-            DrawText("Misses Left: ", 10,680,20,BLACK);  //text, 10, 10 = x y position from left and top edge
+            DrawText("Misses Left: ", 10,680,20, textCol);  //text, 10, 10 = x y position from left and top edge
             
-            DrawWindHUD(ball.windAcceleration, screen_width);   // wind indicator, top-right                                                                         // 20 = font size 
-            DrawPowerBar(cannon.getLaunchSpeed(), screen_width, screen_height);   // <-- add this
+            DrawWindHUD(ball.windAcceleration, screen_width, isNight);
+            DrawPowerBar(cannon.getLaunchSpeed(), screen_width, screen_height, isNight);
                                                                         
 
         EndDrawing();  //pushes frame to screen 

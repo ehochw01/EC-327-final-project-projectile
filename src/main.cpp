@@ -212,7 +212,7 @@ void spawnDebris(std::vector<Debris>& debris, Vector3 origin, Color tColor) { //
 // pick a fresh random spot for the target somewhere downrange
 void randomizeTarget(Target& target) {
     float x = 50.0f;   // 40..150m downrange (+X)
-    float y = (float)GetRandomValue(target.radius, 25);    // 5..30m up
+    float y = (float)GetRandomValue(target.radius, 22);    // 5..30m up
     float z = (float)GetRandomValue(-25, 25);   // -20..20m across the lane
     target.position = { x, y, z };
 }
@@ -279,6 +279,11 @@ int main() {
     while (!WindowShouldClose()) {    // will be true until we hit escape key
         float fTime = GetFrameTime(); // seconds since last frame, in our case 1/60 secs, then uses this to feed the physics engine
 
+        bool gameOver = missesLeft <= 0;   // out of misses: freeze gameplay and show the overlay below
+
+        // all aiming, firing, and physics are frozen once the game is over
+        if (!gameOver) {
+
         if (IsKeyDown(KEY_LEFT))  cannon.decrAzimuth(fTime);
         if (IsKeyDown(KEY_RIGHT)) cannon.incrAzimuth(fTime);
         if (IsKeyDown(KEY_UP))    cannon.incrElevation(fTime);
@@ -316,15 +321,13 @@ int main() {
             targetRespawnTimer = Constants::TARGET_RESPAWN_DELAY;     // ...and stays gone for a short pause
             hitPopupPos = target.position;   // remember where it was hit, before it moves/shrinks below
             hitPopupValue = hitValue;
+            randomizeTarget(target);
             score += hitValue; //add the ring value (1 = outer ring ... 5 = bullseye)
             if (hitCount % 3 == 0) {
                 target.ChangeColor(); //change the color of the target to make it more visually interesting
                 target.Shrink();
                 ball.GenerateWind(); //generate new wind every 3 shots, so the player has to adjust their aim
-                centerTargetPosition(target); //center the target after shrinking
-            } else {
-                randomizeTarget(target);
-            }
+            } 
         } else if (ball.active && targetVisible && !missCounted &&
                    target.Missed(prevBallPos, ball.position, ball.velocity.x)) {
             // ball flew past the target's plane or can no longer reach it: count a miss,
@@ -340,6 +343,8 @@ int main() {
                 targetVisible = true;
             }
         }
+
+        }   // end gameplay block (skipped entirely once gameOver)
 
         BeginDrawing();
             ClearBackground((Color){ 135, 206, 235, 255 });  //sky blue in RBG values
@@ -378,11 +383,25 @@ int main() {
             int missesLabelWidth = MeasureText(missesLabel, 20);
             DrawText(TextFormat("%d", missesLeft), 10 + missesLabelWidth, 680, 20, getMissedLeftColor(missesLeft));
             
-            DrawWindHUD(ball.windAcceleration, screen_width);   // wind indicator, top-right                                                                         // 20 = font size 
+            DrawWindHUD(ball.windAcceleration, screen_width);   // wind indicator, top-right                                                                         // 20 = font size
             DrawPowerBar(cannon.getLaunchSpeed(), screen_width, screen_height);   // <-- add this
-                                                                        
 
-        EndDrawing();  //pushes frame to screen 
+            // game over overlay: dim the scene, then center the message + final score on top of everything
+            if (gameOver) {
+                DrawRectangle(0, 0, screen_width, screen_height, (Color){ 0, 0, 0, 160 });   // translucent dark veil
+
+                const char* overText = "GAME OVER";
+                int overFontSize = 80;
+                int overWidth = MeasureText(overText, overFontSize);
+                DrawText(overText, screen_width / 2 - overWidth / 2, screen_height / 2 - 80, overFontSize, RED);
+
+                const char* finalScoreText = TextFormat("Final Score: %d", score);
+                int scoreFontSize = 40;
+                int scoreWidth = MeasureText(finalScoreText, scoreFontSize);
+                DrawText(finalScoreText, screen_width / 2 - scoreWidth / 2, screen_height / 2 + 20, scoreFontSize, RAYWHITE);
+            }
+
+        EndDrawing();  //pushes frame to screen
     } //closes the while loop
 CloseWindow();
 return 0;

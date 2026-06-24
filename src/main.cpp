@@ -212,13 +212,23 @@ void spawnDebris(std::vector<Debris>& debris, Vector3 origin, Color tColor) { //
 // pick a fresh random spot for the target somewhere downrange
 void randomizeTarget(Target& target) {
     float x = 50.0f;   // 40..150m downrange (+X)
-    float y = (float)GetRandomValue(5, 20);    // 5..30m up
-    float z = (float)GetRandomValue(-20, 20);   // -20..20m across the lane
+    float y = (float)GetRandomValue(target.radius, 25);    // 5..30m up
+    float z = (float)GetRandomValue(-25, 25);   // -20..20m across the lane
     target.position = { x, y, z };
 }
 
 void centerTargetPosition(Target& target) {
     target.position = { 50.0f, 15.0f, 0.0f }; // center of the lane
+}
+
+Color getMissedLeftColor(int missesLeft) {
+    if (missesLeft > 5) {
+        return BLACK;
+    } else if (missesLeft > 2) {
+        return BEIGE;
+    } else {
+        return RED;
+    }
 }
 
 int main() {
@@ -230,7 +240,7 @@ int main() {
 
     int turnCount = 0; //keeps track of how many shots have been fired, used to change wind every 3 shots
     int hitCount = 0;  //keeps track of how many hits the player has scored, used to change target color and size every 3 hits
-    int missCount = 0; //keeps track of how many misses the player has left, game over when it reaches 0
+    int missesLeft = Constants::MISSES_ALLOWED; //keeps track of how many misses the player has left, game over when it reaches 0
 
     // sets up the camera, behind the cannon looking fwd
     Camera3D camera = {};
@@ -264,7 +274,9 @@ int main() {
     Vector3 hitPopupPos = {0.0f, 0.0f, 0.0f};   // where the target was when it was last hit, for the "+N" popup
     int hitPopupValue = 0;                       // the ring value to show in that popup
 
-    while (!WindowShouldClose()) {    // will be true until we hit escape key 
+    bool missCounted = false;   // true once the current shot has been tallied as a miss, so we only count it once while the ball flies on
+
+    while (!WindowShouldClose()) {    // will be true until we hit escape key
         float fTime = GetFrameTime(); // seconds since last frame, in our case 1/60 secs, then uses this to feed the physics engine
 
         if (IsKeyDown(KEY_LEFT))  cannon.decrAzimuth(fTime);
@@ -279,6 +291,7 @@ int main() {
         if (IsKeyReleased(KEY_SPACE)) {
             cannon.Fire(ball);
             ball.active = true;
+            missCounted = false;   // fresh shot, hasn't missed yet
             turnCount++;
         }
 
@@ -306,14 +319,18 @@ int main() {
             score += hitValue; //add the ring value (1 = outer ring ... 5 = bullseye)
             if (hitCount % 3 == 0) {
                 target.ChangeColor(); //change the color of the target to make it more visually interesting
-                target.Shrink(); 
+                target.Shrink();
                 ball.GenerateWind(); //generate new wind every 3 shots, so the player has to adjust their aim
                 centerTargetPosition(target); //center the target after shrinking
             } else {
                 randomizeTarget(target);
-                missCount++; //increment the number of misses, if the player misses the target
             }
-            
+        } else if (ball.active && targetVisible && !missCounted &&
+                   target.Missed(prevBallPos, ball.position, ball.velocity.x)) {
+            // ball flew past the target's plane or can no longer reach it: count a miss,
+            // but leave the ball active so the player can watch it sail past / land
+            missCounted = true;
+            missesLeft--;
         }
 
         // once the pause elapses, move the target and bring it back
@@ -355,7 +372,11 @@ int main() {
                 DrawText("Use arrow keys to aim, hold space to charge, release to fire", 10, 70, 20, DARKGRAY);
             }
 
-            DrawText("Misses Left: ", 10,680,20,BLACK);  //text, 10, 10 = x y position from left and top edge
+            // label stays black; only the number changes color based on missesLeft
+            const char* missesLabel = "Misses Left: ";
+            DrawText(missesLabel, 10, 680, 20, BLACK);
+            int missesLabelWidth = MeasureText(missesLabel, 20);
+            DrawText(TextFormat("%d", missesLeft), 10 + missesLabelWidth, 680, 20, getMissedLeftColor(missesLeft));
             
             DrawWindHUD(ball.windAcceleration, screen_width);   // wind indicator, top-right                                                                         // 20 = font size 
             DrawPowerBar(cannon.getLaunchSpeed(), screen_width, screen_height);   // <-- add this

@@ -10,6 +10,11 @@ class Target : public Entity {
         // so a ball passing through can't register as many hits in a row.
         // returns 0 for no hit, 1 for the outer ring, ... up to 5 for a dead-center bullseye.
         int CheckHit(Vector3 prevBallPos, Vector3 ballPos, float ballRadius) const;
+        // true once the ball can no longer score on this target: either it flew past the
+        // target's downrange plane this frame, or it fell short (behind the target and no
+        // longer moving toward it, which with constant wind means it can never reach it).
+        // the caller should only treat this as a miss when CheckHit didn't register a hit.
+        bool Missed(Vector3 prevBallPos, Vector3 ballPos, float ballVelocityX) const;
         void ChangeColor();   // picks a new random color for the target
         Color GetColor() const { return color; }
         void Shrink();

@@ -26,6 +26,8 @@ Make sure to consider wind when aiming your shot.
 
 ## Live reload during development
 
+> **Note:** `make watch` is macOS/Linux only, since it relies on `entr` and a Unix shell. On Windows, just rerun `make` manually after each change.
+
 To automatically rebuild and rerun the simulation every time you save a source or header file, use the `watch` target.
 
 First install [entr](https://eradman.com/entrproject/) (a lightweight file watcher):

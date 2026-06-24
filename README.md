@@ -10,11 +10,11 @@ Pick the section for your operating system. The same `make` command builds the g
 
 ### macOS
 
-These steps use [Homebrew](https://brew.sh), a package manager for macOS. If you don't already have it, install it by pasting this into your terminal and following the prompts:
+We will use [Homebrew](https://brew.sh) to install raylib. Install homebrew if you don't already have it it by pasting this into your terminal and following the prompts:
 
 ```/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"```
 
-**1. Get the code.** If you don't have git, install it first with `brew install git`. Then download the code and move into the project folder:
+**1. Get the code.** If you don't have git, install it with `brew install git`. Then download the code and move into the project folder:
 
 ```
 git clone https://github.com/ehochw01/Projectile-Sim.git
@@ -29,7 +29,7 @@ cd Projectile-Sim
 
 ```make && ./sim```
 
-That's it — Ready to Play! 🎉
+That's it. Ready to Play! 🎉
 
 > **Linux:** the Makefile builds on Linux too — install raylib via your package manager (e.g. `sudo apt install libraylib-dev`), then `make && ./sim`.
 
@@ -64,9 +64,7 @@ Use your computer arrow keys (UP, DOWN, LEFT, RIGHT) to change the aim direction
 
 Hold the space bar to begin firing the cannon. The longer you hold the space bar, the more powerful the shot will be. Release the space bar to fire. 
 
-Aim for the bullseye targets on the screen. Each target is a set of concentric rings, and the more centered your hit, the more points you score: the outer ring is worth 1 point, climbing up to 5 points for a dead-center bullseye. After being struck, a target briefly disappears before reappearing at a new spot, and every 3rd hit, it also shrinks and changes color, making it progressively harder to hit.
-
-You start with a limited number of misses (shown as "Misses Left" at the bottom of the screen). A shot counts as a miss if it sails past the target or is too weak to ever reach it. When you run out of misses, the game ends and a Game Over screen displays your final score.
+Aim for the bullseye targets on the screen. The more centered your hit, the more points you score. The outer ring is worth 1 point, climbing up to 5 points for a dead-center bullseye. Every 3rd hit, the target shrinks and changes color, making it progressively harder to hit. You have a total of 10 missed shots before the game is over. 
 
 Make sure to consider wind when aiming your shot. 
 
@@ -86,8 +84,7 @@ Then run:
 
 This watches all files in `src/` and `include/`. Whenever you save a change, the running sim closes, only the changed files recompile, and the sim relaunches. Press `Ctrl-C` to stop watching.
 
-Notes:
-- If a build fails, the old sim won't relaunch. The compiler error shows in the terminal and the watcher keeps waiting for your next save.
+Note:
 - If you *add* a brand-new source file, restart `make watch` so it picks up the new file (and remember to add it to `SRCS` in the Makefile).
 
 ## Folder structure
@@ -95,6 +92,8 @@ Notes:
 ```
 include/   header files (.h)
 src/       implementation files (.cpp)
+images/    screenshots used in this README
+music/     background soundtrack (loaded at runtime — run ./sim from the project root)
 Makefile
 README.md
 ```
@@ -105,16 +104,16 @@ Headers live in ```include/``` and are compiled with the ```-Iinclude``` flag, s
 
 The root class is ```Entity``` which has a position.
 It also has a ```virtual``` destructor method.
-It has a ```virtual``` update method which takes in a framerate. 
-It has a ```virtual``` draw method which renders the entity to the screen. 
+It has a ```virtual Update()``` method which takes in a framerate. 
+It has a ```virtual Draw()``` draw method which renders the entity to the screen. 
 
-Class ```PhysicsBody``` inherits from entity and implements the update class with all of the relevant physics math. Entites that move with gravity / wind resistance need to inherit from ```PhysicsBody```. This includes bounce mechanics and randomly generated wind. ```PhysicsBody``` defines the gravitational force, wind, and bounce mechanics of a given set of rounds. Wind changes every three round. 
+Class ```PhysicsBody``` inherits from entity and implements the ```Update()``` class with all of the relevant physics math. Entites that move with gravity / wind resistance need to inherit from ```PhysicsBody```. This includes bounce mechanics and randomly generated wind. ```PhysicsBody``` defines the gravitational force, wind, and bounce mechanics of a given set of rounds. Wind changes every three round. 
 
-The ```Projectile``` class implements the draw method of entity. It represents the ball being launched, and uses raylib's ```DrawSphere()``` API method. It takes a position, radius and color. 
+The ```Projectile``` class implements the ```Draw()``` method of entity. It represents the ball being launched, and uses raylib's ```DrawSphere()``` API method. It takes a position, radius and color. 
 
 The ```Debris``` class also inherits from ```PhysicsBody```, so it reuses the same gravity and bounce physics for free (it only implements ```Draw()```). Debris are the colored fragments that erupt from a target when it is struck.
 
-The ```Target``` class inherits directly from ```Entity``` (it is static, so it does not need ```PhysicsBody```). It is drawn as a bullseye of concentric vertical rings facing the cannon using raylib's ```DrawCylinderEx()``` method. Its ```CheckHit()``` method tests whether the ball crossed the disk's plane within the disk's face on a given frame, firing exactly once per pass-through instead of repeatedly while the ball overlaps a solid volume. It returns which ring was struck (0 for a miss, 1 for the outer ring, up to 5 for a dead-center bullseye) so the caller can score the hit. Its ```Missed()``` method reports when a shot can no longer score, either because it sailed past the target's plane or is too weak to ever reach it.
+The ```Target``` class inherits directly from ```Entity```. It is static, so it does not need ```PhysicsBody```. It is drawn as a bullseye of concentric vertical rings facing the cannon using raylib's ```DrawCylinderEx()``` method. Its ```CheckHit()``` method tests whether the ball crossed the disk's plane within the disk's face on a given frame, firing exactly once per pass-through instead of repeatedly while the ball overlaps a solid volume. It returns which ring was struck (0 for a miss, 1 for the outer ring, up to 5 for a dead-center bullseye) so the caller can score the hit. Its ```Missed()``` method reports when a shot can no longer score, either because it sailed past the target's plane or is too weak to ever reach it.
 
 Then there is the ```Cannon``` class which does NOT inherit from the ```Entity``` class as it is not subject to gravity or wind for it's movement. Only user input can move the cannon, changing its aim direction. The ```Cannon.Fire()``` method takes a ```Projectile``` object by reference, and then affects it's physics metrics. 
 

@@ -56,9 +56,10 @@ void Cannon::incrLaunchSpeed(float frameTime) {
     }
 }
 
+// The cannon's aim direction is a unit vector based on azimuth and elevation angles.
 Vector3 Cannon::AimDirection() const {
-    float az = _azimuth   * DEG2RAD;
-    float el = _elevation * DEG2RAD;
+    float az = _azimuth   * DEG2RAD; // convert degrees to radians for trigonometric functions
+    float el = _elevation * DEG2RAD; 
 
     return {
         cosf(el) * cosf(az),   // X: downrange
@@ -67,6 +68,7 @@ Vector3 Cannon::AimDirection() const {
     };
 }
 
+// The cannon's Draw function renders the base and barrel based on the current aim direction.
 void Cannon::Draw() const {
     // base mount at the origin
     DrawCube({0.0f, 0.5f, 0.0f}, 1.6f, 1.0f, 1.6f, (Color){ 60, 60, 65, 255 }); //dark color cannon
@@ -79,16 +81,17 @@ void Cannon::Draw() const {
         pivot.y + dir.y * barrelLen,
         pivot.z + dir.z * barrelLen
     };
-    DrawCylinderEx(pivot, barrelEnd, 0.35f, 0.28f, 12, (Color){ 40, 40, 45, 255 }); //use drawcylinder from raylib, connect the 2 points
+     // using drawcylinder from raylib, connect the 2 points
+    DrawCylinderEx(pivot, barrelEnd, 0.35f, 0.28f, 12, (Color){ 40, 40, 45, 255 });
 }
 
+// The cannon's Fire function launches a projectile along the current aim direction.
 void Cannon::Fire(Projectile& ball) {
-
     Vector3 dir = AimDirection();
     ball.position = pivot;
     // aim direction * _launchSpeed
     ball.velocity = { dir.x * _launchSpeed, dir.y * _launchSpeed, dir.z * _launchSpeed };
 
-    _launchSpeed = 0.0f;
+    _launchSpeed = 0.0f; // reset launch speed after firing
 }
 

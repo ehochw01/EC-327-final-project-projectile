@@ -4,13 +4,28 @@
 
 ## How to install
 
-First install raylib: 
+These instructions use [Homebrew](https://brew.sh), a package manager for macOS. If you don't already have it, install it by pasting this into your terminal and following the prompts:
+
+```/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"```
+
+### 1. Get the code
+
+If you don't have git, install it first with `brew install git`. Then download the code and move into the project folder:
+
+```
+git clone https://github.com/ehochw01/Projectile-Sim.git
+cd Projectile-Sim
+```
+
+### 2. Install raylib
 
 ```brew install raylib```
 
-To compile and run:
+### 3. Compile and run
 
 ```make && ./sim```
+
+That's it — Ready to Play! 🎉
 
 ## How to play
 

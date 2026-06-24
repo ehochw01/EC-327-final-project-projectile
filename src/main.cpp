@@ -9,6 +9,13 @@
 
 using Constants::DEBRIS_COLOR_VARIATION;
 
+// screen-space star for the twinkling night sky, stored in an array before the game loop
+struct Star {
+    int x, y;
+    float phase;   // offset so each star twinkles on its own cycle
+    Color color;   // mostly white, occasional red/blue/yellow
+};
+
 // keeps a color channel in [0,255] so it's safe to cast to unsigned char without wrapping around
 int ClampColorChannel(int value) {
     if (value < 0) return 0;
@@ -89,27 +96,28 @@ void DrawWindHUD(Vector3 wind, int screenWidth) {
 
     DrawText(tailStr, (int)(dotX + dotRadius + 3), textY, fontSize, BLACK);
 }
-//Helper function, drawworld, self explanatory, it draws the world! 
-void DrawWorld() {
-    // ground plane: a big flat green field at y=0, like grass! 
-    DrawPlane({0.0f, 0.0f, 0.0f}, {1000.0f, 1000.0f}, (Color){ 76, 124, 60, 255 });
+//Helper function, drawworld — draws ground, scenery, and sky objects
+// isNight is decided once at startup and passed in each frame
+void DrawWorld(bool isNight) {
+    // ground plane — darker grass at night
+    Color grass = isNight ? (Color){30, 50, 25, 255} : (Color){76, 124, 60, 255};
+    DrawPlane({0.0f, 0.0f, 0.0f}, {1000.0f, 1000.0f}, grass);
 
-    // subtle grid on top of the grass, like a marked field of some sort
-    DrawGrid(200, 5.0f);   // reads as field markings
+    DrawGrid(200, 5.0f);
 
-    // range markers: low posts every 25m downrange (+X), in pairs 
+    // range markers: low posts every 25m downrange (+X), in pairs
     for (int dist = 25; dist <= 200; dist += 25) {
         float x = (float)dist;
-        // a pair of posts, one on each side of the firing lane,
         DrawCube({ x, 1.0f,  12.0f }, 0.4f, 2.0f, 0.4f, (Color){ 200, 200, 200, 255 });
         DrawCube({ x, 1.0f, -12.0f }, 0.4f, 2.0f, 0.4f, (Color){ 200, 200, 200, 255 });
     }
 
-        // Background scenery:
+    // Background scenery:
 
     // trees along the edges, well clear of the firing lane
-    Color trunk  = {101, 67, 33, 255};   // brown
-    Color leaves = {34, 139, 34, 255};   // forest green
+    // colors darken at night so they read as silhouettes
+    Color trunk  = isNight ? (Color){60, 40, 20, 255}  : (Color){101, 67, 33, 255};
+    Color leaves = isNight ? (Color){15, 70, 15, 255}   : (Color){34, 139, 34, 255};
     // tree at x=30, z=25 (right side)
     DrawCylinder({30.0f, 0.0f, 25.0f}, 0.5f, 0.3f, 8.0f, 8, trunk);
     DrawSphere({30.0f, 9.8f, 25.0f}, 3.0f, leaves);
@@ -130,46 +138,40 @@ void DrawWorld() {
     DrawSphere({160.0f, 8.8f, -25.0f}, 3.0f, leaves);
 
     // boulders scattered off to the sides
-    Color stone = {140, 140, 140, 255};
+    Color stone = isNight ? (Color){80, 80, 80, 255} : (Color){140, 140, 140, 255};
     DrawSphere({25.0f,  0.9f,  18.0f}, 1.5f, stone);
     DrawSphere({80.0f,  1.2f, -20.0f}, 2.0f, stone);
     DrawSphere({55.0f,  0.6f,  22.0f}, 1.0f, stone);
     DrawSphere({140.0f, 1.0f, -18.0f}, 1.8f, stone);
 
-    // big yellow sun high in the sky
-    DrawSphere({200.0f, 110.0f, -110.0f}, 20.0f, YELLOW);
+    // sky objects — sun and clouds during the day, moon at night
+    if (!isNight) {
+        // big yellow sun high in the sky
+        DrawSphere({200.0f, 110.0f, -110.0f}, 20.0f, YELLOW);
 
-    // cloud clusters: groups of overlapping white spheres 
-    Color cloud = {255, 255, 255, 220};
-    DrawSphere({60.0f,  80.0f, -48.0f}, 8.0f, cloud);
-    DrawSphere({65.0f,  80.0f, -43.0f}, 7.0f, cloud);
-    DrawSphere({55.0f,  80.0f, -45.0f}, 6.0f, cloud);
+        // cloud clusters: groups of overlapping white spheres
+        Color cloud = {255, 255, 255, 220};
+        DrawSphere({60.0f,  80.0f, -48.0f}, 8.0f, cloud);
+        DrawSphere({65.0f,  80.0f, -43.0f}, 7.0f, cloud);
+        DrawSphere({55.0f,  80.0f, -45.0f}, 6.0f, cloud);
 
-    DrawSphere({120.0f, 70.0f,  45.0f}, 10.0f, cloud);
-    DrawSphere({125.0f, 70.0f,  28.0f}, 8.0f,  cloud);
-    DrawSphere({120.0f, 70.0f,  34.0f}, 7.0f,  cloud);
+        DrawSphere({120.0f, 70.0f, -45.0f}, 10.0f, cloud);
+        DrawSphere({125.0f, 70.0f, -28.0f}, 8.0f,  cloud);
+        DrawSphere({120.0f, 70.0f, -34.0f}, 7.0f,  cloud);
 
-    DrawSphere({175.0f, 85.0f, -20.0f}, 9.0f, cloud);
-    DrawSphere({185.0f, 80.0f, -16.0f}, 7.0f, cloud);
+        DrawSphere({175.0f, 85.0f, -20.0f}, 9.0f, cloud);
+        DrawSphere({185.0f, 80.0f, -16.0f}, 7.0f, cloud);
+    } else {
+        // pale moon high in the sky
+        DrawSphere({150.0f, 120.0f, -80.0f}, 15.0f, (Color){240, 240, 220, 255});
+    }
 
-    // distant mountains: upside down cones behind the firing range 
-    Color mountain = {100, 100, 120, 255};
+    // distant mountains — darker at night
+    Color mountain = isNight ? (Color){60, 60, 75, 255} : (Color){100, 100, 120, 255};
     DrawCylinder({300.0f, 0.0f, -190.0f},  0.0f, 60.0f, 80.0f, 6, mountain);
     DrawCylinder({350.0f, 0.0f, -160.0f},  0.0f, 50.0f, 65.0f, 6, mountain);
     DrawCylinder({260.0f, 0.0f, -210.0f}, 0.0f, 45.0f, 55.0f, 6, mountain);
     DrawCylinder({320.0f, 0.0f,  -90.0f},  0.0f, 55.0f, 70.0f, 6, mountain);
-
-
-    // how do i make a night time?
-    // I would want a random time of day at the start(probably outside drawworld)
-    // then inside drawworld, I would check the time of day and draw the sky accordingly
-
-    // daytime with sun top left and clouds(light blue sky)
-    // nighttime with moon and stars(dark blue, no clouds, dotted stars: mostly white, some red some blue and some yellow)
-    // sunset? pink and orange sky, sun low on horizon on the right, maybe some stripey clouds
-
-    // how difficult is a simple moving background? twinkling stars, ruslting trees etc?
-    
 }
 
 // another helper function to draw the power charge bar. Bottom-center, fills red as power climbs 0...100
@@ -227,6 +229,24 @@ int main() {
     SetConfigFlags(FLAG_WINDOW_TOPMOST);  // forces window to the front on launch
     InitWindow(screen_width,screen_height, "Projectile Simulator");
     SetTargetFPS(60); //sets the upper limit of the loop at 60 fps
+
+    // random time of day — decided once at startup, affects sky color, scenery colors, and stars
+    bool isNight = GetRandomValue(0, 1);
+
+    // pre-generate stars for the night sky (only drawn when isNight is true)
+    const int STAR_COUNT = 200;
+    Star stars[200];
+    for (int i = 0; i < STAR_COUNT; i++) {
+        stars[i].x = GetRandomValue(0, screen_width);
+        stars[i].y = GetRandomValue(0, screen_height / 2);  // upper half of screen only
+        stars[i].phase = GetRandomValue(0, 628) / 100.0f;   // 0 to ~2*pi
+        // mostly white, occasional colored star
+        int colorRoll = GetRandomValue(0, 10);
+        if (colorRoll == 0)      stars[i].color = {255, 100, 100, 255};  // red
+        else if (colorRoll == 1) stars[i].color = {100, 150, 255, 255};  // blue
+        else if (colorRoll == 2) stars[i].color = {255, 255, 100, 255};  // yellow
+        else                     stars[i].color = {255, 255, 255, 255};  // white
+    }
 
     int turnCount = 0; //keeps track of how many shots have been fired, used to change wind every 3 shots
     int hitCount = 0;  //keeps track of how many hits the player has scored, used to change target color and size every 3 hits
@@ -325,10 +345,12 @@ int main() {
         }
 
         BeginDrawing();
-            ClearBackground((Color){ 135, 206, 235, 255 });  //sky blue in RBG values
-            
-            BeginMode3D(camera);           //enter 3D space from view of camera defined above 
-                DrawWorld();       //uses helper function above to draw the world as defined.
+            // sky color: light blue by day, deep navy at night
+            if (isNight) ClearBackground((Color){ 15, 15, 40, 255 });
+            else         ClearBackground((Color){ 135, 206, 235, 255 });
+
+            BeginMode3D(camera);
+                DrawWorld(isNight);
 
                 cannon.Draw();   //draw the cannon at the origin, barrel points along the current aim
 
@@ -338,6 +360,18 @@ int main() {
 
                 DrawSphere({0,0,0}, 0.3f, RED);  //small sphere to mark the center of the grid.
             EndMode3D(); //no longer drawing in the 3d world after this, but on the flat 2d screen
+
+            // twinkling stars — 2D dots drawn over the sky background, only at night
+            if (isNight) {
+                float t = (float)GetTime();
+                for (int i = 0; i < STAR_COUNT; i++) {
+                    // sin wave with per-star phase offset gives each star its own twinkle rhythm
+                    float alpha = 0.5f + 0.5f * sinf(t * 1.5f + stars[i].phase);
+                    Color c = stars[i].color;
+                    c.a = (unsigned char)(alpha * 255);
+                    DrawCircle(stars[i].x, stars[i].y, 1.5f, c);
+                }
+            }
 
             DrawText("Projectile Sim", 10,10,20,DARKGRAY);  //text, 10, 10 = x y position from left and top edge
             DrawText(TextFormat("Score: %d", score), 10, 40, 20, DARKGRAY);

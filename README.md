@@ -1,8 +1,8 @@
 # Projectile Simulator
 
-[![Start screen — click to watch a gameplay video](images/day_screenshot.png)](https://youtu.be/zXgoBTlb0z8)
+[![Start screen — click to watch a gameplay video](images/day_screenshot.png)](https://youtu.be/aRADoMSwEZg)
 
-▶️ **[Watch a gameplay video on YouTube](https://youtu.be/zXgoBTlb0z8)**
+▶️ **[Watch a gameplay video on YouTube](https://youtu.be/aRADoMSwEZg)**
 
 ## How to install
 
@@ -68,7 +68,9 @@ Aim for the bullseye targets on the screen. The more centered your hit, the more
 
 Make sure to consider wind when aiming your shot. 
 
-For a change o scenery, toggle between day and night with the **Day/Night** button in the bottom-right corner, or by pressing the **N** key.
+For a change of scenery, toggle between day and night with the **Day/Night** button in the bottom-right corner, or by pressing the **N** key.
+
+![Night mode](images/night_screenshot.png)
 
 ## Live reload during development
 

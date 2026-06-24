@@ -240,7 +240,7 @@ Color getMissedLeftColor(int missesLeft) {
 }
 
 int main() {
-    const int screen_width = 1280;   //screen dimensions, const since they shouldn't change
+    const int screen_width = 1280;   //screen dimensions 
     const int screen_height = 720; 
     SetConfigFlags(FLAG_WINDOW_TOPMOST);  // forces window to the front on launch
     InitWindow(screen_width,screen_height, "Projectile Simulator");
@@ -249,26 +249,28 @@ int main() {
     InitAudioDevice();   // must come before loading/playing any audio
     SetAudioStreamBufferSizeDefault(8192);   // larger buffer than the default so a brief frame spike can't starve the stream (stutter)
     Music music = LoadMusicStream("music/8bit_music.ogg");   // streamed from disk, not loaded all at once. ogg loops more seamlessly than mp3
-    music.looping = true;                                    // loop the background track forever
-    // music doesn't start at launch; it kicks in the first time the player hits space (see loop below)
+    music.looping = true; // loop the background track 
+    bool muted = false;   // music on/off, toggled by the mute button in the bottom-right
+    bool musicStarted = false;   // music begins on the player's first space press, not at launch
+    // mute button rectangle, anchored to the bottom-right corner
 
-    int turnCount = 0; //keeps track of how many shots have been fired, used to change wind every 3 shots
-    int hitCount = 0;  //keeps track of how many hits the player has scored, used to change target color and size every 3 hits
-    int missesLeft = Constants::MISSES_ALLOWED; //keeps track of how many misses the player has left, game over when it reaches 0
+    int turnCount = 0; // keeps track of how many shots have been fired
+    int hitCount = 0;  // keeps track of how many hits the player has scored, used to change target color and size every 3 hits as well as wind
+    int missesLeft = Constants::MISSES_ALLOWED; // keeps track of how many misses the player has left, game over when it reaches 0
+    Rectangle muteButton = { (float)screen_width - 100.0f, (float)screen_height - 50.0f, 90.0f, 35.0f };
 
-    // sets up the camera, behind the cannon looking fwd
+    // sets up the camera, behind the cannon looking forward
     Camera3D camera = {};
-    camera.position = {-10.0f, 2.5f, 0.0f}; //behind the camera (neg x), and above, (pos y), classic video game)
-                                            // the reason for the f's is that raylib using a Vector3 struct that takes in float numbers, not doubles. 
+    camera.position = {-10.0f, 2.5f, 0.0f}; // behind the camera (neg x), and above, (pos y), classic video game)
     camera.target = {0.0f, 3.0f, 0.0f};  //what its looking at, slightly upward, this func draws line between position and target, to determine our line of sight
-    camera.up = {0.0f, 1.0f, 0.0f};     //determines which way is up. 
-    camera.fovy = 60.0f;   //fovy means field of view, in degrees
-    camera.projection = CAMERA_PERSPECTIVE; //makes distant things shrink, parallel lines converge toward horizon, same as our eyes. other views available.
+    camera.up = {0.0f, 1.0f, 0.0f};     // determines which way is up. 
+    camera.fovy = 60.0f;   //field of view, in degrees
+    camera.projection = CAMERA_PERSPECTIVE; // makes distant things shrink, parallel lines converge toward horizon
 
     // setup up a ball, angle and initial velocity. 
-    Cannon cannon;   //owns aim + power and fires the ball along the barrel
+    Cannon cannon;  // owns aim + power and fires the ball along the barrel
     Projectile ball;
-    ball.position = cannon.getPivot(); //cannon ball is in the barrel
+    ball.position = cannon.getPivot(); // cannon ball is in the barrel
     ball.active = false; //dormant ball, not simulated until fired
 
     Target target; // target is a sphere, will be drawn at a random location in the world.
@@ -278,22 +280,17 @@ int main() {
 
     std::vector<Debris> debris; // vector to hold debris objects, will be filled when target is hit
 
-    int hitValue = 0;     //0 = no hit, 1 = outer ring ... 5 = bullseye, from Target::CheckHit
+    int hitValue = 0; // 0 = no hit, 1 = outer ring ... 5 = bullseye, from Target::CheckHit
     bool collision = false; //flag to indicate if the ball has hit the target, initially false
-    int score = 0; //initialize score to 0, will increment when target is hit
+    int score = 0; // initialize score to 0, will increment when target is hit
 
-    bool targetVisible = true;          // hidden briefly after a hit while it "respawns" elsewhere
-    float targetRespawnTimer = 0.0f;    // counts down from Constants::TARGET_RESPAWN_DELAY while hidden
+    bool targetVisible = true;        // hidden briefly after a hit while it "respawns" elsewhere
+    float targetRespawnTimer = 0.0f;  // counts down from Constants::TARGET_RESPAWN_DELAY while hidden
 
     Vector3 hitPopupPos = {0.0f, 0.0f, 0.0f};   // where the target was when it was last hit, for the "+N" popup
     int hitPopupValue = 0;                       // the ring value to show in that popup
 
     bool missCounted = false;   // true once the current shot has been tallied as a miss, so we only count it once while the ball flies on
-
-    bool muted = false;   // music on/off, toggled by the mute button in the bottom-right
-    bool musicStarted = false;   // music begins on the player's first space press, not at launch
-    // mute button rectangle, anchored to the bottom-right corner
-    Rectangle muteButton = { (float)screen_width - 100.0f, (float)screen_height - 50.0f, 90.0f, 35.0f };
 
     while (!WindowShouldClose()) {    // will be true until we hit escape key
         float fTime = GetFrameTime(); // seconds since last frame, in our case 1/60 secs, then uses this to feed the physics engine
@@ -317,14 +314,13 @@ int main() {
 
         // all aiming, firing, and physics are frozen once the game is over
         if (!gameOver) {
-
-        if (IsKeyDown(KEY_LEFT))  cannon.decrAzimuth(fTime);
-        if (IsKeyDown(KEY_RIGHT)) cannon.incrAzimuth(fTime);
-        if (IsKeyDown(KEY_UP))    cannon.incrElevation(fTime);
-        if (IsKeyDown(KEY_DOWN))  cannon.decrElevation(fTime);
-        // charge while holding space
-        if (IsKeyDown(KEY_SPACE)) {
-            cannon.incrLaunchSpeed(fTime);
+            if (IsKeyDown(KEY_LEFT))  cannon.decrAzimuth(fTime);
+            if (IsKeyDown(KEY_RIGHT)) cannon.incrAzimuth(fTime);
+            if (IsKeyDown(KEY_UP))    cannon.incrElevation(fTime);
+            if (IsKeyDown(KEY_DOWN))  cannon.decrElevation(fTime);
+            // charge while holding space
+            if (IsKeyDown(KEY_SPACE)) {
+                cannon.incrLaunchSpeed(fTime);
         }
         // fire on release
         if (IsKeyReleased(KEY_SPACE)) {
@@ -351,21 +347,21 @@ int main() {
             spawnDebris(debris, ball.position, target.GetColor()); //spawn debris where the ball actually struck the disk
             collision = false; //reset collision flag to avoid repeated spawning
             ball.active = false; //stop simulating/drawing the ball now that it's struck something
-            targetVisible = false;                                   // target "explodes" and disappears on impact
-            targetRespawnTimer = Constants::TARGET_RESPAWN_DELAY;     // ...and stays gone for a short pause
-            hitPopupPos = target.position;   // remember where it was hit, before it moves/shrinks below
-            hitPopupValue = hitValue;
-            randomizeTarget(target);
-            score += hitValue; //add the ring value (1 = outer ring ... 5 = bullseye)
+            targetVisible = false; // target "explodes" and disappears on impact
+            targetRespawnTimer = Constants::TARGET_RESPAWN_DELAY; // and stays gone for a short pause
+            hitPopupPos = target.position; // remember where it was hit, before it moves/shrinks below
+            hitPopupValue = hitValue; // remember the ring value for the popup
+            randomizeTarget(target); // pick a new random location for the target to respawn at
+            score += hitValue; // add the ring value to score (1 = outer ring ... 5 = bullseye)
             if (hitCount % 3 == 0) {
                 target.ChangeColor(); //change the color of the target to make it more visually interesting
-                target.Shrink();
-                ball.GenerateWind(); //generate new wind every 3 shots, so the player has to adjust their aim
+                target.Shrink(); // shrink the target to make it more challenging
+                ball.GenerateWind(); // generate new wind every 3 shots, so the player has to adjust their aim
             } 
         } else if (ball.active && targetVisible && !missCounted &&
                    target.Missed(prevBallPos, ball.position, ball.velocity.x)) {
-            // ball flew past the target's plane or can no longer reach it: count a miss,
-            // but leave the ball active so the player can watch it sail past / land
+            /* ball flew past the target's plane or can no longer reach it: count a miss,
+               but leave the ball active so the player can watch it sail past / land */
             missCounted = true;
             missesLeft--;
         }
@@ -383,16 +379,12 @@ int main() {
         BeginDrawing();
             ClearBackground((Color){ 135, 206, 235, 255 });  //sky blue in RBG values
             
-            BeginMode3D(camera);           //enter 3D space from view of camera defined above 
+            BeginMode3D(camera);   //enter 3D space from view of camera defined above 
                 DrawWorld();       //uses helper function above to draw the world as defined.
-
                 cannon.Draw();   //draw the cannon at the origin, barrel points along the current aim
-
                 if (ball.active) ball.Draw(); //draw the ball only while it's in flight; hidden once it strikes something
                 if (targetVisible) target.Draw(); //draw the target at its location, hidden during the brief respawn pause
-                for (Debris& piece : debris) piece.Draw();   // all fragments, must be by reference! early mistake
-
-                DrawSphere({0,0,0}, 0.3f, RED);  //small sphere to mark the center of the grid.
+                for (Debris& piece : debris) piece.Draw();   // all fragments
             EndMode3D(); //no longer drawing in the 3d world after this, but on the flat 2d screen
 
             DrawText("Projectile Sim", 10,10,20,DARKGRAY);  //text, 10, 10 = x y position from left and top edge
@@ -400,14 +392,15 @@ int main() {
 
             // "+N" popup floats above where the target was hit, for as long as it's gone (TARGET_RESPAWN_DELAY)
             if (!targetVisible) {
-                Vector3 popupWorldPos = { hitPopupPos.x, hitPopupPos.y + target.radius /3, hitPopupPos.z };
+                Vector3 popupWorldPos = { hitPopupPos.x, hitPopupPos.y + target.radius /3, hitPopupPos.z }; // popup floats above the target's center, not its bottom
                 Vector2 popupScreenPos = GetWorldToScreen(popupWorldPos, camera);
                 const char* popupText = TextFormat("+%d", hitPopupValue);
                 int popupFontSize = 30;
                 int popupTextWidth = MeasureText(popupText, popupFontSize);
                 DrawText(popupText, (int)popupScreenPos.x - popupTextWidth / 2, (int)popupScreenPos.y, popupFontSize, BLACK);
             }
-            if (turnCount == 0) {
+            // show instructions only before the first shot, then hide them to reduce clutter
+            if (turnCount == 0) { 
                 DrawText("Use arrow keys to aim, hold space to charge, release to fire", 10, 70, 20, DARKGRAY);
             }
 
@@ -417,8 +410,10 @@ int main() {
             int missesLabelWidth = MeasureText(missesLabel, 20);
             DrawText(TextFormat("%d", missesLeft), 10 + missesLabelWidth, 680, 20, getMissedLeftColor(missesLeft));
             
-            DrawWindHUD(ball.windAcceleration, screen_width);   // wind indicator, top-right                                                                         // 20 = font size
-            DrawPowerBar(cannon.getLaunchSpeed(), screen_width, screen_height);   // <-- add this
+            // wind indicator, top-right
+            DrawWindHUD(ball.windAcceleration, screen_width);   
+            // power bar, bottom-center
+            DrawPowerBar(cannon.getLaunchSpeed(), screen_width, screen_height);
 
             // game over overlay: dim the scene, then center the message + final score on top of everything
             if (gameOver) {

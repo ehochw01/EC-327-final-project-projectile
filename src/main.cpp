@@ -482,7 +482,7 @@ int main() {
                 DrawText(popupText, (int)popupScreenPos.x - popupTextWidth / 2, (int)popupScreenPos.y, popupFontSize, textCol);
             }
             if (turnCount == 0) {
-                DrawText("Use arrow keys to aim, hold space to charge, release to fire", 10, 70, 20, textCol);
+                DrawText("Use WASD/arrow keys to aim, hold space to charge, release to fire", 10, 70, 20, textCol);
             }
 
             DrawText("Misses Left: ", 10,680,20, textCol);  //text, 10, 10 = x y position from left and top edge
